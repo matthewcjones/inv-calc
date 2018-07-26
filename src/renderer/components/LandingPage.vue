@@ -1,128 +1,171 @@
 <template>
-  <div id="wrapper">
-    <img id="logo" src="~@/assets/logo.png" alt="electron-vue">
-    <main>
-      <div class="left-side">
-        <span class="title">
-          Welcome to your new project!
-        </span>
-        <system-information></system-information>
-      </div>
-
-      <div class="right-side">
-        <div class="doc">
-          <div class="title">Getting Started</div>
-          <p>
-            electron-vue comes packed with detailed documentation that covers everything from
-            internal configurations, using the project structure, building your application,
-            and so much more.
-          </p>
-          <button @click="open('https://simulatedgreg.gitbooks.io/electron-vue/content/')">Read the Docs</button><br><br>
-        </div>
-        <div class="doc">
-          <div class="title alt">Other Documentation</div>
-          <button class="alt" @click="open('https://electron.atom.io/docs/')">Electron</button>
-          <button class="alt" @click="open('https://vuejs.org/v2/guide/')">Vue.js</button>
+  <div>
+    <section class="hero is-primary">
+      <div class="hero-body">
+        <div class="container">
+          <h1 class="title">
+            Investment Calculator
+          </h1>
+          <h2 class="subtitle">
+            Measure investments efficiently
+          </h2>
         </div>
       </div>
-    </main>
+    </section>
+    <div class="container">
+      <div class="columns">
+        <div class="column is-4">
+          <div class="tile is-parent">
+            <section class="tile is-child notification">
+              <form class="content">
+                <div class="field">
+                  <label class="label">Invested Amount:</label>
+                  <div class="control">
+                    <input class="input" type="number" min="0" v-model="input.investedAmount" placeholder="Starting balance">
+                  </div>
+                </div>
+                <div class="field">
+                  <label class="label">Contribution per Year:</label>
+                  <div class="control">
+                    <input class="input" type="number" min="0" v-model="input.contribution" placeholder="Amount added every year">
+                  </div>
+                </div>
+                <div class="field">
+                  <label class="label">Interest % Rate:</label>
+                  <div class="control">
+                    <input class="input" type="number" min="0" v-model="input.interest" placeholder="Percentage per year">
+                  </div>
+                </div>
+                <div class="field">
+                  <label class="label">Number of Years:</label>
+                  <div class="control">
+                    <input class="input" type="number" min="0" v-model="input.years" placeholder="Investing period">
+                  </div>
+                </div>
+                <div class="field">
+                  <label class="label">Profit % Reinvested:</label>
+                  <div class="control">
+                    <input class="input" type="number" min="0" max="100" v-model="input.reinvestedAmount" placeholder="How much profit is reinvested">
+                  </div>
+                </div>
+                <div class="field is-grouped">
+                  <div class="control">
+                    <button class="button is-primary" @click="calculate">Calculate</button>
+                  </div>
+                  <div class="control">
+                    <button class="button is-text" @click="reset">reset</button>
+                  </div>
+                </div>
+              </form>
+            </section>
+          </div>
+        </div>
+        <div class="column is-8">
+          <div v-if="results.length">
+            <section class="section">
+              <div class="message is-info">
+                <div class="message-body">
+                  <strong>Period:</strong> <span v-text="input.years"></span> years
+                  <strong>Total Investment:</strong> <span v-text="totalInvested.toFixed(2)"></span>
+                  <strong>Total Withdrawn:</strong> <span v-text="totalWithdrawn.toFixed(2)"></span>
+                  <strong>Total ROI:</strong> <span v-text="`${totalROI.toFixed(0)}%`"></span>
+                </div>
+              </div>
+            <table class="table is-fullwidth is-hoverable">
+              <thead>
+                <tr>
+                  <th width="15%"># Year</th>
+                  <th width="15%">Balance</th>
+                  <th width="20%">Withdrawn</th>
+                  <th width="30%">Total Withdrawn</th>
+                  <th width="20%">Total ROI</th>
+                </tr>
+              </thead>
+            </table>
+            <div style="overflow: auto; max-height: 250px;">
+              <table class="table is-fullwidth is-hoverable">
+                <tbody>
+                  <tr v-for="result in results">
+                    <td width="15%" v-text="result.year"></td>
+                    <td width="15%" v-text="result.balance.toFixed(2)"></td>
+                    <td width="20%" v-text="result.withdrawn.toFixed(2)"></td>
+                    <td width="30%" v-text="result.totalWithdrawn.toFixed(2)"></td>
+                    <td width="20%" v-text="`${result.totalROI.toFixed(2)}%`"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            </section>
+          </div>
+          <div v-else>
+            <section class="section">
+              <div class="notification">
+                <h1 class="title">How to use the calculator?</h1>
+                <p>
+                    The calculator allows you to calculate how much your investments are going to return over the years.
+                    If you don't intend to withdrawn any money before the end period enter 100% the "Profit % Reinvested" field.
+                </p>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-  import SystemInformation from './LandingPage/SystemInformation';
-
   export default {
-    name: 'landing-page',
-    components: { SystemInformation },
+    data: function data() {
+      return {
+        totalInvested: 0,
+        totalWithdrawn: 0,
+        totalROI: 0,
+        input: {
+          investedAmount: null,
+          contribution: null,
+          interest: null,
+          years: null,
+          reinvestedAmount: null,
+        },
+        results: [],
+      };
+    },
     methods: {
-      open(link) {
-        this.$electron.shell.openExternal(link);
+      calculate() {
+        this.results = [];
+        this.totalInvested = parseFloat(this.input.investedAmount);
+        this.totalWithdrawn = 0;
+        this.totalROI = 0;
+        let balance = parseFloat(this.input.investedAmount);
+        for (let year = 1; year <= this.input.years; year += 1) {
+          const interest = balance * (this.input.interest / 100);
+          const withdrawn = interest - (interest * (this.input.reinvestedAmount / 100));
+          this.totalWithdrawn += withdrawn;
+          balance += interest - withdrawn;
+          balance += parseFloat(this.input.contribution);
+          this.totalROI = (this.totalInvested > 0) ?
+            (this.totalWithdrawn / this.totalInvested) * 100 : 0;
+          this.totalInvested += parseFloat(this.input.contribution);
+          this.results.push({
+            year,
+            balance,
+            withdrawn,
+            totalWithdrawn: this.totalWithdrawn,
+            totalROI: this.totalROI,
+          });
+        }
+      },
+      reset() {
+        this.input = {
+          investedAmount: null,
+          contribution: null,
+          interest: null,
+          years: null,
+          reinvestedAmount: null,
+        };
+        this.results = [];
       },
     },
   };
 </script>
-
-<style>
-  @import url('https://fonts.googleapis.com/css?family=Source+Sans+Pro');
-
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-
-  body { font-family: 'Source Sans Pro', sans-serif; }
-
-  #wrapper {
-    background:
-      radial-gradient(
-        ellipse at top left,
-        rgba(255, 255, 255, 1) 40%,
-        rgba(229, 229, 229, .9) 100%
-      );
-    height: 100vh;
-    padding: 60px 80px;
-    width: 100vw;
-  }
-
-  #logo {
-    height: auto;
-    margin-bottom: 20px;
-    width: 420px;
-  }
-
-  main {
-    display: flex;
-    justify-content: space-between;
-  }
-
-  main > div { flex-basis: 50%; }
-
-  .left-side {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .welcome {
-    color: #555;
-    font-size: 23px;
-    margin-bottom: 10px;
-  }
-
-  .title {
-    color: #2c3e50;
-    font-size: 20px;
-    font-weight: bold;
-    margin-bottom: 6px;
-  }
-
-  .title.alt {
-    font-size: 18px;
-    margin-bottom: 10px;
-  }
-
-  .doc p {
-    color: black;
-    margin-bottom: 10px;
-  }
-
-  .doc button {
-    font-size: .8em;
-    cursor: pointer;
-    outline: none;
-    padding: 0.75em 2em;
-    border-radius: 2em;
-    display: inline-block;
-    color: #fff;
-    background-color: #4fc08d;
-    transition: all 0.15s ease;
-    box-sizing: border-box;
-    border: 1px solid #4fc08d;
-  }
-
-  .doc button.alt {
-    color: #42b983;
-    background-color: transparent;
-  }
-</style>
