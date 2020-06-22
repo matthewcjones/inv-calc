@@ -1,14 +1,14 @@
 <template>
   <div>
     <section class="hero is-primary">
-      <div class="hero-body">
+      <div class="hero-body" style="background-color: #000;">
         <div class="container">
           <h1 class="title">
-            Investment Calculator
+            MJ's Investment Calculator
           </h1>
-          <h2 class="subtitle">
+          <!-- <h2 class="subtitle">
             Measure investments efficiently
-          </h2>
+          </h2> -->
         </div>
       </div>
     </section>
@@ -50,7 +50,7 @@
                 </div>
                 <div class="field is-grouped">
                   <div class="control">
-                    <button class="button is-primary" @click="calculate">Calculate</button>
+                    <button class="button is-primary" style="background-color: #000" @click="calculate">Calculate</button>
                   </div>
                   <div class="control">
                     <button class="button is-text" @click="reset">reset</button>
@@ -97,7 +97,7 @@
             </div>
             </section>
           </div>
-          <div v-else>
+          <!-- <div v-else>
             <section class="section">
               <div class="notification">
                 <h1 class="title">How to use the calculator?</h1>
@@ -107,7 +107,7 @@
                 </p>
               </div>
             </section>
-          </div>
+          </div> -->
         </div>
       </div>
     </div>
